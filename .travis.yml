@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mpchuen/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run mpchuen/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t mpchuen/multi-client ./client
+  - docker build -t mpchuen/multi-nginx ./nginx
+  - docker build -t mpchuen/multi-server ./server
+  - docker build -t mpchuen/multi-worker ./worker
+
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take images and push to Docker hub
+  - docker push mpchuen/multi-client
+  - docker push mpchuen/multi-nginx
+  - docker push mpchuen/multi-server
+  - docker push mpchuen/multi-worker
